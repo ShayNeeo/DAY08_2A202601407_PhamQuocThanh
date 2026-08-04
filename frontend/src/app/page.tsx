@@ -179,42 +179,69 @@ function MarkdownRenderer({
   );
 }
 
+function extractConciseSentence(rawContent: string): string {
+  if (!rawContent) return "";
+  let clean = rawContent.replace(/^---[\s\S]*?---/, "").trim();
+  clean = clean.replace(/^#+.*$/gm, "").trim();
+
+  const sentences = clean
+    .split(/(?<=[.!?])\s+|\n\n+/)
+    .map((s) => s.trim())
+    .filter(
+      (s) =>
+        s.length > 30 &&
+        !s.toLowerCase().startsWith("source:") &&
+        !s.toLowerCase().startsWith("page ") &&
+        !s.startsWith("---")
+    );
+
+  if (sentences.length > 0) {
+    return sentences.slice(0, 2).join(" ");
+  }
+
+  return clean.slice(0, 180);
+}
+
 function HighlightedTextRenderer({ fullText, highlightText }: { fullText: string; highlightText: string }) {
   if (!highlightText || !highlightText.trim()) {
     return <div className="font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">{fullText}</div>;
   }
 
-  const snippet = highlightText.trim();
-  const index = fullText.indexOf(snippet);
+  const conciseHighlight = extractConciseSentence(highlightText);
+  const snippet = conciseHighlight || highlightText.trim();
+  
+  let index = fullText.indexOf(snippet);
+
+  // If exact match not found, try matching the first key phrase
+  if (index === -1) {
+    const keyPhrase = snippet.split(" ").slice(0, 6).join(" ");
+    if (keyPhrase) {
+      index = fullText.indexOf(keyPhrase);
+    }
+  }
 
   if (index === -1) {
-    const firstWord = snippet.split(" ")[0];
-    const wordIdx = fullText.indexOf(firstWord);
-    if (wordIdx !== -1) {
-      const before = fullText.slice(0, wordIdx);
-      const match = fullText.slice(wordIdx, wordIdx + snippet.length);
-      const after = fullText.slice(wordIdx + snippet.length);
-      return (
-        <div className="font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">
-          {before}
-          <mark className="bg-cyan-500/25 border-l-4 border-cyan-400 text-cyan-200 font-bold p-1 rounded-sm shadow-lg shadow-cyan-500/20 inline-block my-1">
-            {match}
-          </mark>
-          {after}
+    return (
+      <div className="space-y-3 font-mono text-xs text-slate-200 leading-relaxed">
+        <div className="bg-cyan-500/20 border-l-4 border-cyan-400 p-3 rounded-r-xl shadow-md shadow-cyan-500/10 text-cyan-200 font-bold mb-4">
+          <div className="text-[10px] uppercase tracking-wider text-cyan-400 font-mono mb-1">🎯 Exact Key Citation Highlight:</div>
+          "{snippet}"
         </div>
-      );
-    }
-    return <div className="font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">{fullText}</div>;
+        <div className="whitespace-pre-wrap opacity-80">{fullText}</div>
+      </div>
+    );
   }
 
   const before = fullText.slice(0, index);
-  const match = fullText.slice(index, index + snippet.length);
-  const after = fullText.slice(index + snippet.length);
+  const matchLength = snippet.length > 0 && fullText.includes(snippet) ? snippet.length : 150;
+  const match = fullText.slice(index, index + matchLength);
+  const after = fullText.slice(index + matchLength);
 
   return (
     <div className="font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">
       {before}
-      <mark className="bg-cyan-500/25 border-l-4 border-cyan-400 text-cyan-200 font-bold p-1.5 rounded-md shadow-lg shadow-cyan-500/20 inline-block my-2">
+      <mark className="bg-cyan-500/30 border-l-4 border-cyan-400 text-cyan-200 font-bold p-2.5 rounded-xl shadow-xl shadow-cyan-500/20 block my-3 border border-cyan-500/40">
+        <span className="text-[10px] uppercase tracking-wider text-cyan-300 font-mono block mb-1">🎯 Exact Citation Highlight:</span>
         {match}
       </mark>
       {after}
