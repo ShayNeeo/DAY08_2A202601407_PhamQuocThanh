@@ -8,8 +8,16 @@ venv/
 
 # Env (keys)
 .env
+.env.local
 
-# Temp PDF conversion cache
+# Frontend Node Modules & Next.js Build
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Vector Store & Temp PDF conversion cache
+data/processed/chroma_db/
+chroma_db/
 data/_tmp_pdf/
 
 # Temp / cache
@@ -22,6 +30,15 @@ pageindex_pdfs/
 .vscode/
 .idea/
 
+# Graphify
+.graphify/
+graphify-out/
+.planning/
+graph.json
+graph.html
+GRAPH_REPORT.md
+
 # OS
 .DS_Store
 Thumbs.db
+*.log
