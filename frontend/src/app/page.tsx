@@ -392,8 +392,19 @@ export default function Home() {
       });
     }, 180);
 
+    const aiMsgId = `ai-${Date.now()}`;
+    const initialAiMsg: Message = {
+      id: aiMsgId,
+      role: "assistant",
+      content: "",
+      sources: [],
+      retrievalSource: "hybrid"
+    };
+
+    setMessages((prev) => [...prev, initialAiMsg]);
+
     try {
-      const response = await fetch("http://localhost:8000/api/chat", {
+      const response = await fetch("http://localhost:8000/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -407,35 +418,81 @@ export default function Home() {
         throw new Error(`Backend server returned HTTP ${response.status}`);
       }
 
-      const data = await response.json();
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let streamBuffer = "";
+      let fullAnswer = "";
 
-      if (data.step_latencies) {
-        setAnalytics((prev) => ({
-          ...prev,
-          step_latencies: {
-            ...prev.step_latencies,
-            ...data.step_latencies
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          streamBuffer += decoder.decode(value, { stream: true });
+          const lines = streamBuffer.split("\n\n");
+          streamBuffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const eventData = JSON.parse(line.slice(6));
+                if (eventData.type === "step_complete") {
+                  setActiveStreamingStep(eventData.step);
+                  if (eventData.latency_ms) {
+                    setAnalytics((prev) => ({
+                      ...prev,
+                      step_latencies: {
+                        ...prev.step_latencies,
+                        [`step_${eventData.step}`]: eventData.latency_ms
+                      }
+                    }));
+                  }
+                } else if (eventData.type === "token_chunk") {
+                  fullAnswer += eventData.text;
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMsgId ? { ...msg, content: fullAnswer } : msg
+                    )
+                  );
+                } else if (eventData.type === "chat_complete") {
+                  const realSources: SourceItem[] = (eventData.sources || []).map((s: any) => ({
+                    source: s.metadata?.source || s.source || "Unknown Document",
+                    score: s.score || 0.5210,
+                    type: s.metadata?.type || "policy",
+                    content: s.content || ""
+                  }));
+
+                  if (eventData.step_latencies) {
+                    setAnalytics((prev) => ({
+                      ...prev,
+                      step_latencies: {
+                        ...prev.step_latencies,
+                        ...eventData.step_latencies
+                      }
+                    }));
+                  }
+
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMsgId
+                        ? {
+                            ...msg,
+                            content: eventData.answer || fullAnswer,
+                            sources: realSources,
+                            retrievalSource: eventData.retrieval_source || "hybrid",
+                            stepLatencies: eventData.step_latencies
+                          }
+                        : msg
+                    )
+                  );
+                }
+              } catch (e) {
+                console.warn("SSE parse note:", e);
+              }
+            }
           }
-        }));
+        }
       }
-
-      const realSources: SourceItem[] = (data.sources || []).map((s: any) => ({
-        source: s.metadata?.source || s.source || "Unknown Document",
-        score: s.score || 0.5210,
-        type: s.metadata?.type || "policy",
-        content: s.content || ""
-      }));
-
-      const aiMsg: Message = {
-        id: `ai-${Date.now()}`,
-        role: "assistant",
-        content: data.answer || "No answer returned.",
-        sources: realSources,
-        retrievalSource: data.retrieval_source || "hybrid",
-        stepLatencies: data.step_latencies
-      };
-
-      setMessages((prev) => [...prev, aiMsg]);
     } catch (err: any) {
       console.warn("Real backend unreachable, using intelligent demo response:", err);
 
