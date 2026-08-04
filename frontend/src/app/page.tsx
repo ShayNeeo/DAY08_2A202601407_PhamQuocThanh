@@ -891,13 +891,19 @@ export default function Home() {
                           {msg.role === "assistant" ? (
                             <MarkdownRenderer
                               content={msg.content}
-                              onSourceClick={(fname) =>
+                              onSourceClick={(fname) => {
+                                const cleanTargetName = fname.replace(".pdf", "").replace(".md", "").toLowerCase();
+                                const matchedSource = msg.sources?.find((s) => {
+                                  const sName = s.source.replace(".pdf", "").replace(".md", "").toLowerCase();
+                                  return sName.includes(cleanTargetName) || cleanTargetName.includes(sName);
+                                }) || msg.sources?.[0];
+
                                 handleOpenPdfPreview(
                                   fname,
-                                  msg.sources?.[0]?.score || 0.521,
-                                  msg.sources?.[0]?.content
-                                )
-                              }
+                                  matchedSource?.score || 0.521,
+                                  matchedSource?.content || ""
+                                );
+                              }}
                             />
                           ) : (
                             msg.content
@@ -1293,13 +1299,19 @@ export default function Home() {
                       {msg.role === "assistant" ? (
                         <MarkdownRenderer
                           content={msg.content}
-                          onSourceClick={(fname, sc) =>
+                          onSourceClick={(fname) => {
+                            const cleanTargetName = fname.replace(".pdf", "").replace(".md", "").toLowerCase();
+                            const matchedSource = msg.sources?.find((s) => {
+                              const sName = s.source.replace(".pdf", "").replace(".md", "").toLowerCase();
+                              return sName.includes(cleanTargetName) || cleanTargetName.includes(sName);
+                            }) || msg.sources?.[0];
+
                             handleOpenPdfPreview(
                               fname,
-                              sc || msg.sources?.[0]?.score || 0.521,
-                              msg.sources?.[0]?.content
-                            )
-                          }
+                              matchedSource?.score || 0.521,
+                              matchedSource?.content || ""
+                            );
+                          }}
                         />
                       ) : (
                         msg.content
