@@ -4,10 +4,11 @@ Task 9 — Retrieval Pipeline Hoàn Chỉnh (Hybrid Search + RRF + PageIndex Fal
 
 from src.task5_semantic_search import semantic_search
 from src.task6_lexical_search import lexical_search
-from src.task7_reranking import rerank, rerank_rrf
+from src.task7_reranking import rerank_rrf
 from src.task8_pageindex_vectorless import pageindex_search
 
-SCORE_THRESHOLD = 0.48  # Ngưỡng Cosine gốc để trigger fallback
+# Ngưỡng Cosine gốc thích hợp cho cross-lingual semantic matching (tiếng Việt <-> tiếng Anh)
+SCORE_THRESHOLD = 0.35
 DEFAULT_TOP_K = 5
 RERANK_METHOD = "rrf"
 
@@ -25,7 +26,7 @@ def retrieve(
     Args:
         query: Câu truy vấn
         top_k: Số lượng kết quả cuối cùng
-        score_threshold: Ngưỡng điểm Cosine gốc tối thiểu (KHÔNG so với RRF score)
+        score_threshold: Ngưỡng điểm Cosine gốc tối thiểu
         use_reranking: Có áp dụng RRF reranking hay không
         customer_role: Filter theo vai trò người dùng ('applicant' | 'student' | None)
 
@@ -37,9 +38,20 @@ def retrieve(
             'source': str  # 'hybrid' hoặc 'pageindex'
         }
     """
-    # Step 1: Run Semantic Search (Dense) and Lexical Search (Sparse)
+    # Step 1: Run Semantic Search (Dense)
     dense_results = semantic_search(query, top_k=top_k * 2, customer_role=customer_role)
-    sparse_results = lexical_search(query, top_k=top_k * 2, customer_role=customer_role)
+
+    # Run Lexical Search (Sparse) with backwards compatible signature
+    sparse_results = []
+    try:
+        sparse_results = lexical_search(query, top_k=top_k * 2, customer_role=customer_role)
+    except TypeError:
+        try:
+            sparse_results = lexical_search(query, top_k=top_k * 2)
+        except Exception:
+            sparse_results = []
+    except Exception:
+        sparse_results = []
 
     # Check original Cosine score for fallback trigger
     best_dense_score = dense_results[0]["score"] if dense_results else 0.0
@@ -64,11 +76,7 @@ def retrieve(
         item["source"] = "hybrid"
 
     # Step 3: Rerank / Trim to top_k
-    if use_reranking and len(merged) > 1:
-        final_results = merged[:top_k]
-    else:
-        final_results = merged[:top_k]
-
+    final_results = merged[:top_k]
     return final_results
 
 

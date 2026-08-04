@@ -42,6 +42,84 @@ interface Message {
   retrievalSource?: string;
 }
 
+function renderFormattedText(text: string) {
+  const parts = text.split(/(\[Source:\s*[^\]]+\]|\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, i) => {
+    if (part.startsWith("[Source:") && part.endsWith("]")) {
+      const filename = part.replace("[Source:", "").replace("]", "").trim();
+      return (
+        <span
+          key={i}
+          className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 font-mono text-[11px] font-semibold shadow-sm shadow-cyan-500/10"
+        >
+          <FileText className="w-3 h-3 text-cyan-400" />
+          {filename}
+        </span>
+      );
+    }
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-bold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
+function MarkdownRenderer({ content }: { content: string }) {
+  const lines = content.split("\n");
+
+  return (
+    <div className="space-y-2 text-slate-200 leading-relaxed text-sm">
+      {lines.map((line, idx) => {
+        if (!line.trim()) return <div key={idx} className="h-1" />;
+
+        if (line.startsWith("# ")) {
+          return (
+            <h1 key={idx} className="text-base font-extrabold text-cyan-400 mt-2 mb-1">
+              {renderFormattedText(line.replace("# ", ""))}
+            </h1>
+          );
+        }
+        if (line.startsWith("## ") || line.startsWith("### ")) {
+          return (
+            <h2 key={idx} className="text-sm font-bold text-white mt-1.5 mb-1">
+              {renderFormattedText(line.replace(/^#{2,3}\s+/, ""))}
+            </h2>
+          );
+        }
+
+        if (line.trim().startsWith("* ") || line.trim().startsWith("- ")) {
+          const itemText = line.trim().replace(/^[\*\-]\s+/, "");
+          return (
+            <div key={idx} className="flex items-start gap-2 ml-2 my-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0" />
+              <span>{renderFormattedText(itemText)}</span>
+            </div>
+          );
+        }
+
+        const numberedMatch = line.trim().match(/^(\d+)\.\s+(.*)/);
+        if (numberedMatch) {
+          return (
+            <div key={idx} className="flex items-start gap-2 ml-1 my-1">
+              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 text-[11px] font-bold shrink-0">
+                {numberedMatch[1]}.
+              </span>
+              <span>{renderFormattedText(numberedMatch[2])}</span>
+            </div>
+          );
+        }
+
+        return <p key={idx}>{renderFormattedText(line)}</p>;
+      })}
+    </div>
+  );
+}
+
 export default function Home() {
   // Navigation & Screen Flow State
   const [currentScreen, setCurrentScreen] = useState<"landing" | "dashboard">("landing");
@@ -529,10 +607,14 @@ export default function Home() {
                         className={`p-4 rounded-2xl text-sm leading-relaxed ${
                           msg.role === "user"
                             ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-tr-none shadow-md shadow-cyan-500/20"
-                            : "glass-panel text-slate-200 border-slate-700/60 rounded-tl-none whitespace-pre-wrap"
+                            : "glass-panel text-slate-200 border-slate-700/60 rounded-tl-none"
                         }`}
                       >
-                        {msg.content}
+                        {msg.role === "assistant" ? (
+                          <MarkdownRenderer content={msg.content} />
+                        ) : (
+                          msg.content
+                        )}
                       </div>
 
                       {/* Source Citations Accordion */}
