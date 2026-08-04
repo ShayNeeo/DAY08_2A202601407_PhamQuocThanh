@@ -30,7 +30,8 @@ import {
   SlidersHorizontal,
   Key,
   Menu,
-  X
+  X,
+  Monitor
 } from "lucide-react";
 
 interface SourceItem {
@@ -127,20 +128,17 @@ function MarkdownRenderer({ content }: { content: string }) {
 }
 
 export default function Home() {
-  // Navigation & Screen Flow State
   const [currentScreen, setCurrentScreen] = useState<"landing" | "dashboard">("landing");
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [userRole, setUserRole] = useState<"applicant" | "student">("student");
   const [activeTab, setActiveTab] = useState<"dashboard" | "analytics" | "chat" | "settings">("dashboard");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // System Settings State
   const [scoreThreshold, setScoreThreshold] = useState(0.35);
   const [selectedModel, setSelectedModel] = useState("gemma-4-26b-a4b-it");
   const [chunkSize, setChunkSize] = useState(800);
   const [chunkOverlap, setChunkOverlap] = useState(100);
 
-  // Chat & Pipeline State
   const [inputQuery, setInputQuery] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [backendStatus, setBackendStatus] = useState<"connecting" | "live" | "fallback">("live");
@@ -173,14 +171,12 @@ export default function Home() {
     }
   ]);
 
-  // Handle Mock Login
   const handleLogin = (role: "applicant" | "student") => {
     setUserRole(role);
     setIsLoginOpen(false);
     setCurrentScreen("dashboard");
   };
 
-  // REAL END-TO-END BACKEND FETCH FUNCTION
   const handleSendMessage = async (customQuery?: string) => {
     const q = customQuery || inputQuery;
     if (!q.trim() || isGenerating) return;
@@ -352,7 +348,6 @@ export default function Home() {
           Aurora RAG Architecture • FastAPI + Next.js 16 + ChromaDB Vector Store
         </footer>
 
-        {/* Modal Persona Login */}
         {isLoginOpen && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
             <div className="glass-panel-glow max-w-md w-full p-8 rounded-3xl border border-slate-700/80 relative">
@@ -547,7 +542,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* TAB 1: AI DASHBOARD (MAIN OVERVIEW VIEW) */}
+        {/* TAB 1: AI DASHBOARD */}
         {activeTab === "dashboard" && (
           <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
             <div className="lg:col-span-2 flex flex-col gap-6">
@@ -664,16 +659,16 @@ export default function Home() {
                   </div>
                   <div className="space-y-3">
                     <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800 text-xs">
-                      <div className="font-bold text-slate-200">VinUni Scholarship Audit</div>
+                      <div className="font-bold text-slate-200">Social Media Campaign Optimization</div>
                       <div className="text-slate-500 mt-0.5">Automated validation</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800 text-xs">
-                      <div className="font-bold text-slate-200">ADEC Admissions Check</div>
+                      <div className="font-bold text-slate-200">Customer Support Automation</div>
                       <div className="text-slate-500 mt-0.5">AI Rule Engine</div>
                     </div>
                   </div>
                   <button className="w-full mt-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold shadow-md shadow-cyan-500/20">
-                    Run RAG Automation
+                    Run AI Automation
                   </button>
                 </div>
 
@@ -688,7 +683,7 @@ export default function Home() {
                         <div className="w-7 h-7 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-[10px]">JS</div>
                         <div>
                           <div className="font-semibold text-slate-200">Jane Slieho</div>
-                          <div className="text-[10px] text-slate-500">Scholarship Eligibility Verified</div>
+                          <div className="text-[10px] text-slate-500">Social Media verified</div>
                         </div>
                       </div>
                       <span className="text-[10px] text-slate-500">0d</span>
@@ -698,8 +693,19 @@ export default function Home() {
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-[10px]">JH</div>
                         <div>
-                          <div className="font-semibold text-slate-200">Jars Halanork</div>
-                          <div className="text-[10px] text-slate-500">Admissions Record Checked</div>
+                          <div className="font-semibold text-slate-200">Jarer Halanork</div>
+                          <div className="text-[10px] text-slate-500">Boosted recently received</div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-slate-500">1h</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-[10px]">JM</div>
+                        <div>
+                          <div className="font-semibold text-slate-200">Jons Miohah</div>
+                          <div className="text-[10px] text-slate-500">Customer support feedback</div>
                         </div>
                       </div>
                       <span className="text-[10px] text-slate-500">1h</span>
@@ -709,9 +715,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN — WIDGETS WITH PERFECTED SVG CHART MATH */}
+            {/* RIGHT COLUMN — ANALYTICS WIDGETS MATCHING IMAGE EXACTLY */}
             <div className="flex flex-col gap-6">
-              {/* Performance Overview Widget with Fixed Wave Line Dot Math */}
+              {/* Performance Overview Widget */}
               <div className="glass-panel p-6 rounded-2xl border-slate-800 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-white text-sm">Performance Overview</h3>
@@ -721,11 +727,11 @@ export default function Home() {
                 </div>
 
                 <div className="mb-4">
-                  <div className="text-xs text-slate-400">RAG Hybrid Recall@3</div>
-                  <div className="text-3xl font-extrabold text-white tracking-tight mt-1">+100.0%</div>
+                  <div className="text-xs text-slate-400">Revenue</div>
+                  <div className="text-3xl font-extrabold text-white tracking-tight mt-1">+18.5%</div>
                 </div>
 
-                {/* Fixed SVG Curve + Dot Math Alignment */}
+                {/* Double Peak Wave SVG Line Math matching original image */}
                 <div className="h-28 w-full relative mb-4">
                   <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
                     <defs>
@@ -735,44 +741,43 @@ export default function Home() {
                       </linearGradient>
                     </defs>
 
-                    {/* Area fill under curve */}
                     <path
-                      d="M 0 75 C 50 105, 100 35, 150 55 C 200 75, 230 20, 300 25 L 300 100 L 0 100 Z"
+                      d="M 0 70 C 40 100, 80 40, 130 35 C 180 30, 210 70, 260 20 C 285 10, 295 15, 300 20 L 300 100 L 0 100 Z"
                       fill="url(#waveGradient)"
                     />
 
-                    {/* Glowing Stroke Curve Line */}
                     <path
-                      d="M 0 75 C 50 105, 100 35, 150 55 C 200 75, 230 20, 300 25"
+                      d="M 0 70 C 40 100, 80 40, 130 35 C 180 30, 210 70, 260 20 C 285 10, 295 15, 300 20"
                       fill="none"
                       stroke="#00F2FE"
                       strokeWidth="3"
                       strokeLinecap="round"
                     />
 
-                    {/* Perfectly Positioned Dot at Peak (X=230, Y=20) */}
-                    <circle cx="230" cy="20" r="6" fill="#00F2FE" className="animate-ping opacity-75" />
-                    <circle cx="230" cy="20" r="4" fill="#FFFFFF" />
+                    {/* Glowing White Dot on Peak 1 (X=130, Y=35) */}
+                    <circle cx="130" cy="35" r="6" fill="#00F2FE" className="animate-ping opacity-75" />
+                    <circle cx="130" cy="35" r="4" fill="#FFFFFF" />
                   </svg>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 border-t border-slate-800/80 pt-4 text-xs">
                   <div>
-                    <div className="text-slate-400">Recall Rate</div>
-                    <div className="text-base font-bold text-white mt-0.5">+100%</div>
+                    <div className="text-slate-400">Revenue</div>
+                    <div className="text-base font-bold text-white mt-0.5">+18.5%</div>
                   </div>
                   <div>
-                    <div className="text-slate-400">Active Queries</div>
-                    <div className="text-base font-bold text-white mt-0.5">+122 Chunks</div>
+                    <div className="text-slate-400">Active Users</div>
+                    <div className="text-base font-bold text-white mt-0.5">+72k</div>
                   </div>
                 </div>
               </div>
 
-              {/* Data Insights Donut Breakdown Widget */}
-              <div className="glass-panel p-6 rounded-2xl border-slate-800">
-                <h3 className="font-bold text-white text-sm mb-4">Data Insights</h3>
-                <div className="flex items-center justify-between">
-                  <div className="w-24 h-24 relative flex items-center justify-center">
+              {/* Data Insights & Model Accuracy Split Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Data Insights Donut Widget */}
+                <div className="glass-panel p-5 rounded-2xl border-slate-800">
+                  <h3 className="font-bold text-white text-xs mb-3">Data Insights</h3>
+                  <div className="w-20 h-20 mx-auto my-2 relative flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                       <path
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -787,50 +792,78 @@ export default function Home() {
                         strokeWidth="4"
                         strokeDasharray="45, 100"
                       />
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#3B82F6"
-                        strokeWidth="4"
-                        strokeDasharray="30, 100"
-                        strokeDashoffset="-45"
-                      />
                     </svg>
                   </div>
-
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      <span className="text-slate-300">Engagement</span>
-                      <span className="font-bold text-white ml-auto">45%</span>
+                  <div className="grid grid-cols-3 gap-1 text-[10px] text-center pt-2 border-t border-slate-800">
+                    <div>
+                      <div className="text-slate-400">Engage</div>
+                      <div className="font-bold text-white">45%</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                      <span className="text-slate-300">Retention</span>
-                      <span className="font-bold text-white ml-auto">30%</span>
+                    <div>
+                      <div className="text-slate-400">Retain</div>
+                      <div className="font-bold text-white">30%</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                      <span className="text-slate-300">Growth</span>
-                      <span className="font-bold text-white ml-auto">25%</span>
+                    <div>
+                      <div className="text-slate-400">Growth</div>
+                      <div className="font-bold text-white">25%</div>
                     </div>
                   </div>
+                </div>
+
+                {/* Model Accuracy Widget */}
+                <div className="glass-panel p-5 rounded-2xl border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-white text-xs mb-3">Model Accuracy</h3>
+                    <div className="space-y-2 text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Engagement</span>
+                        <span className="font-bold text-white">45%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Retention</span>
+                        <span className="font-bold text-white">30%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Growth</span>
+                        <span className="font-bold text-white">25%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button className="w-full mt-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold transition-all">
+                    Complete
+                  </button>
                 </div>
               </div>
 
-              {/* System Health Widget */}
-              <div className="glass-panel p-6 rounded-2xl border-slate-800">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-white text-sm">System Health</h3>
-                  <Activity className="w-4 h-4 text-cyan-400" />
+              {/* System Health Widget with Mini Monitor Graphic */}
+              <div className="glass-panel p-6 rounded-2xl border-slate-800 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-bold text-white text-sm">System Health</h3>
+                    <Activity className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div className="text-3xl font-extrabold text-white tracking-tight">99.2%</div>
+                  <div className="flex items-center gap-4 text-[10px] text-slate-400 mt-2">
+                    <span>6%</span>
+                    <span>99</span>
+                    <span>%</span>
+                  </div>
                 </div>
-                <div className="text-3xl font-extrabold text-white tracking-tight">99.2%</div>
-                <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
-                  <div className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full w-[99.2%]" />
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2">
-                  <span>Latency: 0.018s</span>
-                  <span>ChromaDB Active</span>
+
+                {/* Mini Monitor Graphic */}
+                <div className="w-20 h-16 rounded-xl bg-slate-900 border border-cyan-500/40 p-2 flex flex-col justify-between shadow-lg shadow-cyan-500/10">
+                  <div className="w-full h-8 relative">
+                    <svg className="w-full h-full" viewBox="0 0 60 30">
+                      <path
+                        d="M 0 20 L 15 10 L 30 22 L 45 5 L 60 15"
+                        fill="none"
+                        stroke="#00F2FE"
+                        strokeWidth="2"
+                      />
+                      <circle cx="45" cy="5" r="2" fill="#FFFFFF" />
+                    </svg>
+                  </div>
+                  <div className="w-4 h-1 bg-slate-700 rounded-full mx-auto" />
                 </div>
               </div>
             </div>
@@ -845,14 +878,11 @@ export default function Home() {
                 <h2 className="text-2xl font-bold text-white">RAG Performance Analytics</h2>
                 <p className="text-xs text-slate-400">Deep telemetry on hybrid retrieval accuracy, latency, and vector embeddings.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
-                  ChromaDB 0.5.0 Active
-                </span>
-              </div>
+              <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold">
+                ChromaDB Active
+              </span>
             </div>
 
-            {/* 4 Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="glass-panel p-5 rounded-2xl border-slate-800">
                 <div className="text-xs text-slate-400 font-semibold mb-1">Hybrid Recall@3</div>
@@ -875,91 +905,10 @@ export default function Home() {
                 <div className="text-[10px] text-slate-500 mt-1">P99 response time</div>
               </div>
             </div>
-
-            {/* Analytics Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Dual Curve Recall vs Precision Chart */}
-              <div className="glass-panel p-6 rounded-2xl border-slate-800">
-                <h3 className="font-bold text-white text-sm mb-4">Recall@K vs Precision Curve</h3>
-                <div className="h-48 w-full relative">
-                  <svg className="w-full h-full" viewBox="0 0 300 120" preserveAspectRatio="none">
-                    <path
-                      d="M 0 100 Q 75 30 150 20 T 300 10"
-                      fill="none"
-                      stroke="#00F2FE"
-                      strokeWidth="3"
-                    />
-                    <path
-                      d="M 0 110 Q 75 60 150 45 T 300 40"
-                      fill="none"
-                      stroke="#818CF8"
-                      strokeWidth="3"
-                      strokeDasharray="4,4"
-                    />
-                    <circle cx="150" cy="20" r="4" fill="#00F2FE" />
-                    <circle cx="150" cy="45" r="4" fill="#818CF8" />
-                  </svg>
-                </div>
-                <div className="flex items-center justify-center gap-6 mt-4 text-xs">
-                  <span className="flex items-center gap-2 text-cyan-400 font-semibold">
-                    <span className="w-3 h-0.5 bg-cyan-400 inline-block" /> Recall@K
-                  </span>
-                  <span className="flex items-center gap-2 text-indigo-400 font-semibold">
-                    <span className="w-3 h-0.5 bg-indigo-400 border-dashed inline-block" /> Precision@K
-                  </span>
-                </div>
-              </div>
-
-              {/* Latency Bar Chart */}
-              <div className="glass-panel p-6 rounded-2xl border-slate-800">
-                <h3 className="font-bold text-white text-sm mb-4">Latency Distribution by Step</h3>
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <div className="flex justify-between text-slate-300 mb-1">
-                      <span>Dense Vector Search (ChromaDB)</span>
-                      <span className="font-mono text-cyan-400 font-bold">4.2 ms</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div className="bg-cyan-400 h-full w-[30%]" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-slate-300 mb-1">
-                      <span>Sparse BM25 Search</span>
-                      <span className="font-mono text-blue-400 font-bold">2.1 ms</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div className="bg-blue-400 h-full w-[15%]" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-slate-300 mb-1">
-                      <span>RRF Reranking & Lost-in-Middle</span>
-                      <span className="font-mono text-indigo-400 font-bold">1.8 ms</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-400 h-full w-[12%]" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-slate-300 mb-1">
-                      <span>OpenRouter LLM Generation</span>
-                      <span className="font-mono text-emerald-400 font-bold">9.9 ms</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div className="bg-emerald-400 h-full w-[70%]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* TAB 3: AI WORKSPACE / CHAT VIEW */}
+        {/* TAB 3: AI WORKSPACE */}
         {activeTab === "chat" && (
           <div className="p-6 md:p-8 flex flex-col lg:flex-row gap-6 flex-1">
             <div className="flex-1 glass-panel-glow p-6 rounded-3xl border border-slate-700/80 flex flex-col h-[600px]">
@@ -1004,34 +953,26 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Pipeline Context Inspector Sidebar */}
             <div className="w-full lg:w-80 glass-panel p-6 rounded-3xl border border-slate-800 space-y-6">
               <h3 className="font-bold text-white text-sm flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-cyan-400" />
                 Pipeline Inspector
               </h3>
-
               <div className="space-y-3 text-xs">
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
                   <div className="text-slate-400 mb-1 font-semibold">Active LLM Model</div>
                   <div className="text-cyan-400 font-mono font-bold">{selectedModel}</div>
                 </div>
-
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
                   <div className="text-slate-400 mb-1 font-semibold">Score Threshold</div>
                   <div className="text-white font-mono font-bold">{scoreThreshold} Cosine</div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <div className="text-slate-400 mb-1 font-semibold">Embeddings Dimension</div>
-                  <div className="text-white font-mono font-bold">384 (all-MiniLM-L6-v2)</div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 4: SYSTEM SETTINGS VIEW */}
+        {/* TAB 4: SYSTEM SETTINGS */}
         {activeTab === "settings" && (
           <div className="p-6 md:p-8 max-w-4xl space-y-6 flex-1">
             <div>
@@ -1053,7 +994,6 @@ export default function Home() {
                   onChange={(e) => setScoreThreshold(parseFloat(e.target.value))}
                   className="w-full accent-cyan-400 bg-slate-800 rounded-lg cursor-pointer"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">Queries scoring below this threshold trigger PageIndex Fallback.</p>
               </div>
 
               <div>
@@ -1068,31 +1008,6 @@ export default function Home() {
                   <option value="gemini-2.5-flash">Google Gemini 2.5 Flash</option>
                 </select>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-2">Chunk Size</label>
-                  <input
-                    type="number"
-                    value={chunkSize}
-                    onChange={(e) => setChunkSize(parseInt(e.target.value))}
-                    className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-2">Chunk Overlap</label>
-                  <input
-                    type="number"
-                    value={chunkOverlap}
-                    onChange={(e) => setChunkOverlap(parseInt(e.target.value))}
-                    className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-              </div>
-
-              <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs shadow-lg shadow-cyan-500/20">
-                Save RAG Configurations
-              </button>
             </div>
           </div>
         )}
