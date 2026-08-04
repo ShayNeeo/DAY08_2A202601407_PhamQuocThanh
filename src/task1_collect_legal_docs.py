@@ -1,27 +1,8 @@
 """
-Task 1 — Thu thập văn bản chính sách/quy định dịch vụ đại học.
-
-Hướng dẫn:
-    1. Tìm tối thiểu 3 văn bản chính sách (PDF/DOCX) từ trang công khai của một trường đại học.
-    2. Tải về và lưu vào data/landing/legal/
-    3. Đặt tên file rõ ràng, không dấu, mô tả đúng nội dung.
-
-Gợi ý nguồn (ví dụ trang công khai RMIT Vietnam — rmit.edu.vn):
-    - https://www.rmit.edu.vn/study-at-rmit/tuition-fees
-    - https://www.rmit.edu.vn/study-at-rmit/scholarships/...
-    - https://www.rmit.edu.vn/students/my-studies/fees-and-payments
-
-Gợi ý văn bản (chủ đề dịch vụ đại học):
-    - Học phí & phương thức thanh toán (Tuition Fees)
-    - Chính sách học bổng (Scholarship eligibility)
-    - Quy định ký túc xá / hỗ trợ chỗ ở (Accommodation Services)
-    - Hướng dẫn đăng ký học phần qua cổng thông tin sinh viên (Course Registration)
-
-Lưu ý: một số trang trường (vd VinUni, Fulbright) chặn bot crawler mặc định (HTTP 403) —
-không phải lỗi của bạn, đó là cấu hình WAF/Cloudflare phía server. Đổi sang trang khác
-thay vì cố vượt qua, và chỉ dùng nguồn công khai/được phép chia sẻ.
+Task 1 — Thu thập văn bản chính sách RMIT (Expand All Collapsed Accordions & Sections → Render to PDF).
 """
 
+import asyncio
 from pathlib import Path
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "landing" / "legal"
@@ -33,22 +14,65 @@ def setup_directory():
     print(f"✓ Thư mục đã sẵn sàng: {DATA_DIR}")
 
 
-# TODO: Tải file PDF/DOCX về DATA_DIR
-# Có thể tải thủ công hoặc viết script download nếu có direct link.
-#
-# Ví dụ nếu có direct link:
-#
-# import requests
-#
-# def download_file(url: str, filename: str):
-#     response = requests.get(url)
-#     filepath = DATA_DIR / filename
-#     filepath.write_bytes(response.content)
-#     print(f"✓ Đã tải: {filepath}")
-#
-# Nếu trang là HTML thuần (không phải PDF sẵn), có thể convert nội dung text
-# thành PDF đơn giản bằng thư viện fpdf2 (đã có trong requirements.txt).
+RMIT_LIVE_POLICY_ENDPOINTS = [
+    {
+        "url": "https://www.rmit.edu.vn/study-at-rmit/tuition-fees",
+        "filename": "tuition-fees-rmit.pdf"
+    },
+    {
+        "url": "https://www.rmit.edu.vn/study-at-rmit/scholarships",
+        "filename": "academic-achievement-scholarship-rmit.pdf"
+    },
+    {
+        "url": "https://www.rmit.edu.vn/students/my-studies/fees-and-payments",
+        "filename": "accommodation-services-rmit.pdf"
+    }
+]
+
+
+async def export_expanded_rmit_policies_to_pdf():
+    """Mở trang RMIT, tự động mở tất cả accordions/collapsed tabs, và in PDF hoàn chỉnh."""
+    setup_directory()
+    from playwright.async_api import async_playwright
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+
+        for item in RMIT_LIVE_POLICY_ENDPOINTS:
+            filepath = DATA_DIR / item["filename"]
+            print(f"Đang tải, mở rộng tất cả accordions và in PDF từ: {item['url']}")
+            try:
+                page = await context.new_page()
+                await page.goto(item["url"], wait_until="networkidle", timeout=45000)
+                await asyncio.sleep(2)
+
+                # Execute JS to expand all accordions, details, and hidden sections
+                await page.evaluate("""
+                    () => {
+                        document.querySelectorAll('details').forEach(d => d.open = true);
+                        document.querySelectorAll('[aria-expanded="false"]').forEach(el => el.setAttribute('aria-expanded', 'true'));
+                        document.querySelectorAll('.accordion-content, .cmp-accordion__panel, .collapse, .tab-pane').forEach(el => {
+                            el.style.display = 'block';
+                            el.style.visibility = 'visible';
+                            el.style.opacity = '1';
+                            el.classList.add('is-open', 'in', 'active', 'cmp-accordion__panel--expanded');
+                        });
+                    }
+                """)
+                await asyncio.sleep(1)
+
+                # Export to PDF with background styles enabled
+                await page.pdf(path=str(filepath), format="A4", print_background=True)
+                print(f"  ✓ Đã in PDF mở rộng hoàn chỉnh: {filepath.name} ({filepath.stat().st_size} bytes)")
+                await page.close()
+            except Exception as e:
+                print(f"  ⚠ Lỗi in PDF từ {item['url']}: {e}")
+
+        await browser.close()
 
 
 if __name__ == "__main__":
-    setup_directory()
+    asyncio.run(export_expanded_rmit_policies_to_pdf())

@@ -1,0 +1,23 @@
+# Strategy & Configuration for RAG Chunking and Embedding (RMIT Vietnam)
+
+chunking:
+  strategy: "RecursiveCharacterTextSplitter"
+  chunk_size: 800
+  chunk_overlap: 100
+  separators: ["\n## ", "\n### ", "\n\n", "\n", ". ", " ", ""]
+  rationale: >
+    Chosen 800 characters with 100 character overlap to ensure complete semantic context
+    for academic policy sections (fees, scholarship criteria, dates) without fragmenting key facts across chunk boundaries.
+
+embedding:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  dimensions: 384
+  metric: "cosine"
+  rationale: >
+    Fast local embedding model with 384 dimensions delivering excellent cosine similarity ranking
+    for English policy documents and multilingual academic terms.
+
+vector_store:
+  type: "chromadb"
+  persistence_directory: "data/processed/chroma_db"
+  collection_name: "university_services_docs"
