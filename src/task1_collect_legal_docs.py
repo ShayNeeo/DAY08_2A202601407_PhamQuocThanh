@@ -12,10 +12,8 @@ def setup_directory():
 
 
 def clean_text_for_pdf(text: str) -> str:
-    """Loại bỏ ký tự không thuộc latin-1 để tránh lỗi font trong fpdf2."""
-    # Transliterate common accented/special characters to ASCII/Latin-1
-    text = text.encode("latin-1", "ignore").decode("latin-1")
-    return text.strip()
+    """Chuẩn hóa whitespace, giữ nguyên Unicode (tiếng Việt, tiếng Anh)."""
+    return " ".join(text.split())
 
 
 def fetch_rmit_page_content(url: str) -> str:
@@ -56,33 +54,37 @@ def create_pdf_from_rmit_web(filename: str, title: str, source_url: str, body_te
 
     class RMITPolicyPDF(FPDF):
         def header(self):
-            self.set_font("Helvetica", "B", 10)
+            self.set_font("Arial", "B", 10)
             self.cell(0, 8, "RMIT UNIVERSITY VIETNAM - OFFICIAL ONLINE DOCUMENT", border=False, new_x="LMARGIN", new_y="NEXT", align="C")
             self.line(10, 18, 200, 18)
             self.ln(4)
 
         def footer(self):
             self.set_y(-15)
-            self.set_font("Helvetica", "I", 8)
+            self.set_font("Arial", "I", 8)
             self.cell(0, 10, f"Page {self.page_no()}", align="C")
 
     pdf = RMITPolicyPDF()
+    # Arial hỗ trợ đầy đủ Unicode (tiếng Việt + tiếng Anh)
+    pdf.add_font("Arial", fname=r"C:\Windows\Fonts\arial.ttf")
+    pdf.add_font("Arial", style="B", fname=r"C:\Windows\Fonts\arialbd.ttf")
+    pdf.add_font("Arial", style="I", fname=r"C:\Windows\Fonts\ariali.ttf")
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
     # Document Header
-    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_font("Arial", "B", 14)
     pdf.multi_cell(0, 8, clean_text_for_pdf(title), align="L")
     pdf.ln(2)
 
-    pdf.set_font("Helvetica", "I", 9)
+    pdf.set_font("Arial", "I", 9)
     pdf.multi_cell(0, 6, clean_text_for_pdf(f"Source URL: {source_url}"), align="L")
     pdf.ln(5)
 
     # Body Content
-    pdf.set_font("Helvetica", "", 10)
+    pdf.set_font("Arial", "", 10)
     paragraphs = body_text.split("\n\n")
-    
+
     for p in paragraphs:
         cleaned_p = clean_text_for_pdf(p)
         if cleaned_p:
@@ -99,31 +101,48 @@ def collect_rmit_policies():
     setup_directory()
 
     rmit_pages = [
+        # --- Tiếng Anh (English) ---
         {
-            "filename": "rmit-homepage-vi.pdf",
-            "title": "RMIT Vietnam Trang Chu va Tong Quan Dich Vu",
-            "url": "https://www.rmit.edu.vn/vi"
-        },
-        {
-            "filename": "tuition-fees-rmit.pdf",
-            "title": "RMIT Vietnam Tuition Fees and Financial Regulations",
+            "filename": "tuition-fees-rmit-en.pdf",
+            "title": "RMIT Vietnam – Tuition Fees and Financial Regulations",
             "url": "https://www.rmit.edu.vn/study-at-rmit/tuition-fees"
         },
         {
-            "filename": "scholarships-rmit.pdf",
-            "title": "RMIT Vietnam Scholarship Eligibility and Guidelines",
+            "filename": "scholarships-rmit-en.pdf",
+            "title": "RMIT Vietnam – Scholarship Eligibility and Guidelines",
             "url": "https://www.rmit.edu.vn/study-at-rmit/scholarships"
         },
         {
-            "filename": "undergraduate-programs-rmit.pdf",
-            "title": "RMIT Vietnam Undergraduate Programs and Admission Policy",
+            "filename": "undergraduate-programs-rmit-en.pdf",
+            "title": "RMIT Vietnam – Undergraduate Programs and Admission Policy",
             "url": "https://www.rmit.edu.vn/study-at-rmit/undergraduate-programs"
         },
         {
-            "filename": "student-services-rmit.pdf",
-            "title": "RMIT Vietnam Current Student Services and Regulations",
+            "filename": "student-services-rmit-en.pdf",
+            "title": "RMIT Vietnam – Current Student Services and Regulations",
             "url": "https://www.rmit.edu.vn/students"
-        }
+        },
+        # --- Tiếng Việt (Vietnamese) ---
+        {
+            "filename": "hoc-phi-rmit-vi.pdf",
+            "title": "RMIT Việt Nam – Học Phí và Quy Định Tài Chính",
+            "url": "https://www.rmit.edu.vn/vi/hoc-tai-rmit/hoc-phi"
+        },
+        {
+            "filename": "hoc-bong-rmit-vi.pdf",
+            "title": "RMIT Việt Nam – Chính Sách Học Bổng",
+            "url": "https://www.rmit.edu.vn/vi/hoc-tai-rmit/hoc-bong"
+        },
+        {
+            "filename": "chuong-trinh-dai-hoc-rmit-vi.pdf",
+            "title": "RMIT Việt Nam – Chương Trình Đại Học và Chính Sách Nhập Học",
+            "url": "https://www.rmit.edu.vn/vi/hoc-tai-rmit/chuong-trinh-dai-hoc"
+        },
+        {
+            "filename": "sinh-vien-rmit-vi.pdf",
+            "title": "RMIT Việt Nam – Dịch Vụ Và Quy Định Sinh Viên Hiện Tại",
+            "url": "https://www.rmit.edu.vn/vi/sinh-vien"
+        },
     ]
 
     for page in rmit_pages:
