@@ -1,0 +1,122 @@
+[
+  {
+    "question": "Học phí một năm cho chương trình cử nhân tại RMIT Vietnam là bao nhiêu?",
+    "ground_truth": "Học phí trung bình ước tính cho chương trình cử nhân RMIT Vietnam dao động từ 315.000.000 VNĐ đến 350.000.000 VNĐ một năm học (96 tín chỉ).",
+    "expected_source": "tuition-fees-rmit.md",
+    "customer_role": "applicant"
+  },
+  {
+    "question": "Hạn chót đóng học phí (Census Date) là ngày nào và mức phí nộp trễ là bao nhiêu?",
+    "ground_truth": "Hạn chót Census Date là Thứ Sáu tuần thứ 2 của mỗi học kỳ. Phạt nộp trễ sau Census Date là 2.000.000 VNĐ.",
+    "expected_source": "tuition-fees-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Thông tin tài khoản Vietcombank của RMIT Vietnam để chuyển khoản học phí là gì?",
+    "ground_truth": "Tên tài khoản: Cong ty TNHH Dai hoc RMIT Viet Nam, Số tài khoản: 0071000888888, Vietcombank Chi nhánh Nam Sài Gòn.",
+    "expected_source": "tuition-fees-rmit.md",
+    "customer_role": "applicant"
+  },
+  {
+    "question": "Những ngân hàng nào liên kết với RMIT trả góp học phí lãi suất 0%?",
+    "ground_truth": "RMIT Vietnam liên kết trả góp 0% lãi suất (kỳ hạn 6-12 tháng) với Shinhan Bank, Sacombank, Techcombank và HSBC.",
+    "expected_source": "tuition-fees-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Chính sách hoàn phí khi rút học phần trước và sau Census Date như thế nào?",
+    "ground_truth": "Rút trước Tuần 1 hoàn 100%, từ Tuần 1 đến Census Date hoàn 50%, sau Census Date không hoàn phí và bị điểm WF.",
+    "expected_source": "tuition-fees-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Học bổng President's Scholarship tại RMIT Vietnam đài thọ bao nhiêu học phí?",
+    "ground_truth": "Học bổng President's Scholarship đài thọ 100% học phí toàn bộ chương trình đại học.",
+    "expected_source": "academic-achievement-scholarship-rmit.md",
+    "customer_role": "applicant"
+  },
+  {
+    "question": "Điểm trung bình THPT tối thiểu để nộp hồ sơ học bổng RMIT là bao nhiêu?",
+    "ground_truth": "Ứng viên cần đạt GPA THPT tối thiểu 9.0/10 (hoặc IB 38+ điểm, A-Levels A*AA).",
+    "expected_source": "academic-achievement-scholarship-rmit.md",
+    "customer_role": "applicant"
+  },
+  {
+    "question": "Yêu cầu tiếng Anh IELTS tối thiểu cho học bổng RMIT là bao nhiêu?",
+    "ground_truth": "Yêu cầu IELTS Academic từ 7.0 trở lên (không kỹ năng nào dưới 6.5) hoặc TOEFL iBT 94+.",
+    "expected_source": "academic-achievement-scholarship-rmit.md",
+    "customer_role": "applicant"
+  },
+  {
+    "question": "Duy trì học bổng RMIT qua từng năm cần đạt GPA tích lũy bao nhiêu?",
+    "ground_truth": "Sinh viên nhận học bổng phải duy trì điểm trung bình tích lũy CGPA tối thiểu 3.2/4.0.",
+    "expected_source": "academic-achievement-scholarship-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Giá phòng Ký túc xá Single Studio Apartment tại RMIT Nam Sài Gòn là bao nhiêu?",
+    "ground_truth": "Phòng Single Deluxe Studio có giá 8.500.000 VNĐ / tháng / sinh viên (đã bao gồm điện nước wi-fi).",
+    "expected_source": "accommodation-services-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Khung giờ khóa cửa chính của Ký túc xá RMIT là khi nào?",
+    "ground_truth": "Cửa chính Ký túc xá tự động khóa từ 23:00 đêm đến 05:00 sáng hôm sau.",
+    "expected_source": "accommodation-services-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Khách ngoài vào Ký túc xá phải rời đi trước mấy giờ?",
+    "ground_truth": "Khách thăm phải đăng ký tại lễ tân và rời khỏi ký túc xá trước 22:00.",
+    "expected_source": "accommodation-services-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Số điện thoại đường dây nóng hỗ trợ tâm lý 24/7 của RMIT là gì?",
+    "ground_truth": "Đường dây nóng tư vấn tâm lý 24/7 là (+84 28) 3776 1300 hoặc email wellbeing@rmit.edu.vn.",
+    "expected_source": "accommodation-services-rmit.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Điều kiện tiếng Anh để xét tuyển thẳng chương trình cử nhân RMIT là gì?",
+    "ground_truth": "Yêu cầu IELTS Academic 6.5+ (không kỹ năng dưới 6.0) hoặc TOEFL iBT 79+.",
+    "expected_source": "article_01.md",
+    "customer_role": "applicant"
+  },
+  {
+    "question": "Số lượng sách tối đa sinh viên cử nhân được mượn tại Thư viện RMIT là bao nhiêu?",
+    "ground_truth": "Sinh viên cử nhân được mượn tối đa 15 quyển sách trong thời hạn 14 ngày.",
+    "expected_source": "article_02.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Mức phạt trả sách quá hạn tại Thư viện RMIT là bao nhiêu?",
+    "ground_truth": "Phạt 10.000 VNĐ/ngày cho sách thường và 50.000 VNĐ/ngày cho sách mượn ngắn hạn reserve.",
+    "expected_source": "article_02.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Dịch vụ Equitable Learning Services (ELS) hỗ trợ những gì cho sinh viên?",
+    "ground_truth": "ELS hỗ trợ thêm 15-30 phút làm bài thi, hình thức thi thay thế và thiết bị hỗ trợ cho sinh viên có tình trạng sức khỏe.",
+    "expected_source": "article_03.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Học phần thực tập WIL (Work Integrated Learning) kéo dài bao lâu?",
+    "ground_truth": "Học phần thực tập WIL kéo dài 12 đến 16 tuần (tương đương 12 tín chỉ).",
+    "expected_source": "article_04.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Thang điểm 4 của RMIT quy định điểm High Distinction (HD) như thế nào?",
+    "ground_truth": "Điểm HD áp dụng cho kết quả từ 80 - 100% tương đương Grade Point 4.0.",
+    "expected_source": "article_05.md",
+    "customer_role": "student"
+  },
+  {
+    "question": "Lệ phí cấp bảng điểm số verified MyeQuals là bao nhiêu?",
+    "ground_truth": "Lệ phí cấp bảng điểm số MyeQuals là 150.000 VNĐ mỗi bản.",
+    "expected_source": "article_05.md",
+    "customer_role": "student"
+  }
+]
