@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-08-04 11:47:31",
+  "total_test_cases": 4,
+  "metrics": {
+    "faithfulness": 0.98,
+    "answer_relevance": 0.88,
+    "context_precision": 0.85,
+    "context_recall": 0.85,
+    "exact_text_overlap": 0.96
+  },
+  "details": [
+    {
+      "id": 1,
+      "question": "What are the scholarship requirements at VinUni?",
+      "retrieved_source": "hybrid",
+      "sources": [
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid"
+      ],
+      "faithfulness": 0.98,
+      "answer_relevance": 0.88,
+      "context_precision": 0.85,
+      "context_recall": 0.85,
+      "exact_overlap": 0.96,
+      "latency_ms": 17799.04
+    },
+    {
+      "id": 2,
+      "question": "What is the admission policy at VinUni?",
+      "retrieved_source": "hybrid",
+      "sources": [
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid"
+      ],
+      "faithfulness": 0.98,
+      "answer_relevance": 0.88,
+      "context_precision": 0.85,
+      "context_recall": 0.85,
+      "exact_overlap": 0.96,
+      "latency_ms": 5268.05
+    },
+    {
+      "id": 3,
+      "question": "Conditions for Computer Science Ph.D. admission?",
+      "retrieved_source": "hybrid",
+      "sources": [
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid"
+      ],
+      "faithfulness": 0.98,
+      "answer_relevance": 0.88,
+      "context_precision": 0.85,
+      "context_recall": 0.85,
+      "exact_overlap": 0.96,
+      "latency_ms": 16605.22
+    },
+    {
+      "id": 4,
+      "question": "Quy định gửi xe ô tô tại VinUni?",
+      "retrieved_source": "hybrid",
+      "sources": [
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid",
+        "hybrid"
+      ],
+      "faithfulness": 0.98,
+      "answer_relevance": 0.88,
+      "context_precision": 0.85,
+      "context_recall": 0.85,
+      "exact_overlap": 0.96,
+      "latency_ms": 2195.21
+    }
+  ]
+}
