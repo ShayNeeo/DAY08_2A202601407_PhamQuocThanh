@@ -100,6 +100,11 @@ def collect_rmit_policies():
 
     rmit_pages = [
         {
+            "filename": "rmit-homepage-vi.pdf",
+            "title": "RMIT Vietnam Trang Chu va Tong Quan Dich Vu",
+            "url": "https://www.rmit.edu.vn/vi"
+        },
+        {
             "filename": "tuition-fees-rmit.pdf",
             "title": "RMIT Vietnam Tuition Fees and Financial Regulations",
             "url": "https://www.rmit.edu.vn/study-at-rmit/tuition-fees"
