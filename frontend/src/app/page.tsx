@@ -91,7 +91,7 @@ interface AnalyticsData {
 
 function renderFormattedText(
   text: string,
-  onSourceClick?: (filename: string, score?: number) => void
+  onSourceClick?: (filename: string, score?: number, lineText?: string) => void
 ) {
   const parts = text.split(/(\[Source:\s*[^\]]+\]|\*\*[^*]+\*\*)/g);
 
@@ -101,7 +101,7 @@ function renderFormattedText(
       return (
         <button
           key={i}
-          onClick={() => onSourceClick && onSourceClick(filename, 0.5210)}
+          onClick={() => onSourceClick && onSourceClick(filename, 0.5210, text)}
           className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/30 text-cyan-300 font-mono text-[11px] font-semibold shadow-sm shadow-cyan-500/20 transition-all cursor-pointer group"
           title="Click to view exact PDF text preview with highlighted chunk"
         >
@@ -127,7 +127,7 @@ function MarkdownRenderer({
   onSourceClick
 }: {
   content: string;
-  onSourceClick?: (filename: string, score?: number) => void;
+  onSourceClick?: (filename: string, score?: number, lineText?: string) => void;
 }) {
   const lines = content.split("\n");
 
@@ -179,7 +179,7 @@ function MarkdownRenderer({
   );
 }
 
-function extractConciseSentence(rawContent: string): string {
+function extractConciseSentence(rawContent: string, contextSentence?: string): string {
   if (!rawContent) return "";
   let clean = rawContent.replace(/^---[\s\S]*?---/, "").trim();
   clean = clean.replace(/^#+.*$/gm, "").trim();
@@ -189,17 +189,42 @@ function extractConciseSentence(rawContent: string): string {
     .map((s) => s.trim())
     .filter(
       (s) =>
-        s.length > 30 &&
+        s.length > 25 &&
         !s.toLowerCase().startsWith("source:") &&
         !s.toLowerCase().startsWith("page ") &&
+        !s.toLowerCase().includes("official english policy document") &&
         !s.startsWith("---")
     );
 
-  if (sentences.length > 0) {
-    return sentences.slice(0, 2).join(" ");
+  if (sentences.length === 0) return clean.slice(0, 180);
+
+  if (contextSentence && contextSentence.trim()) {
+    const ctxLower = contextSentence.toLowerCase();
+
+    for (const s of sentences) {
+      const sLower = s.toLowerCase();
+      if (
+        (ctxLower.includes("thư giới thiệu") || ctxLower.includes("bài luận") || ctxLower.includes("hồ sơ")) &&
+        (sLower.includes("components") || sLower.includes("essay") || sLower.includes("transcripts") || sLower.includes("recommendation"))
+      ) {
+        return s;
+      }
+      if (
+        (ctxLower.includes("quy trình") || ctxLower.includes("phỏng vấn") || ctxLower.includes("rút gọn")) &&
+        (sLower.includes("shortlisted") || sLower.includes("interview") || sLower.includes("candidates"))
+      ) {
+        return s;
+      }
+      if (
+        (ctxLower.includes("tiêu chí") || ctxLower.includes("adec") || ctxLower.includes("trụ cột")) &&
+        (sLower.includes("adec") || sLower.includes("selection") || sLower.includes("discipline") || sLower.includes("empathy"))
+      ) {
+        return s;
+      }
+    }
   }
 
-  return clean.slice(0, 180);
+  return sentences[0];
 }
 
 function HighlightedTextRenderer({ fullText, highlightText }: { fullText: string; highlightText: string }) {
@@ -207,9 +232,7 @@ function HighlightedTextRenderer({ fullText, highlightText }: { fullText: string
     return <div className="font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">{fullText}</div>;
   }
 
-  const conciseHighlight = extractConciseSentence(highlightText);
-  const snippet = conciseHighlight || highlightText.trim();
-  
+  const snippet = highlightText.trim();
   let index = fullText.indexOf(snippet);
 
   // If exact match not found, try matching the first key phrase
@@ -341,29 +364,34 @@ export default function Home() {
   const handleOpenPdfPreview = async (
     filename: string,
     realScore: number = 0.5210,
-    highlightContent: string = ""
+    highlightContent: string = "",
+    contextSentence?: string
   ) => {
     try {
       const url = `http://localhost:8000/api/document?filename=${encodeURIComponent(filename)}&score=${realScore}&highlight=${encodeURIComponent(highlightContent)}`;
       const res = await fetch(url);
       const data = await res.json();
 
+      const fullDocText = data.full_text || "Document text loaded.";
+      const targetSentence = extractConciseSentence(fullDocText, contextSentence || highlightContent);
+
       setPreviewPdf({
         filename: data.filename || filename,
         docType: data.doc_type || "legal",
         score: realScore || data.score || 0.5210,
-        fullText: data.full_text || "Document text loaded.",
-        highlightText: highlightContent || data.highlight_text || "",
+        fullText: fullDocText,
+        highlightText: targetSentence || highlightContent,
         path: data.path || `data/standardized/legal/${filename.replace(".pdf", ".md")}`
       });
     } catch (err) {
       console.warn("Failed to fetch real document text:", err);
+      const targetSentence = extractConciseSentence(highlightContent, contextSentence);
       setPreviewPdf({
         filename,
         docType: "legal",
         score: realScore,
         fullText: `DOCUMENT: ${filename}\n\nOfficial VinUniversity policy document verified by ChromaDB vector store.`,
-        highlightText: highlightContent,
+        highlightText: targetSentence || highlightContent,
         path: `data/standardized/legal/${filename.replace(".pdf", ".md")}`
       });
     }
@@ -891,7 +919,7 @@ export default function Home() {
                           {msg.role === "assistant" ? (
                             <MarkdownRenderer
                               content={msg.content}
-                              onSourceClick={(fname) => {
+                              onSourceClick={(fname, _sc, lineText) => {
                                 const cleanTargetName = fname.replace(".pdf", "").replace(".md", "").toLowerCase();
                                 const matchedSource = msg.sources?.find((s) => {
                                   const sName = s.source.replace(".pdf", "").replace(".md", "").toLowerCase();
@@ -901,7 +929,8 @@ export default function Home() {
                                 handleOpenPdfPreview(
                                   fname,
                                   matchedSource?.score || 0.521,
-                                  matchedSource?.content || ""
+                                  matchedSource?.content || "",
+                                  lineText || ""
                                 );
                               }}
                             />
