@@ -13,6 +13,31 @@ DEFAULT_TOP_K = 5
 RERANK_METHOD = "rrf"
 
 
+def safe_rerank_rrf(ranked_lists: list[list[dict]], top_k: int = 5, k: int = 60) -> list[dict]:
+    """
+    RRF reranking an toàn - tự động fallback nếu Task 7 chưa được cài đặt.
+    """
+    try:
+        return rerank_rrf(ranked_lists, top_k=top_k, k=k)
+    except Exception:
+        rrf_scores = {}
+        content_map = {}
+
+        for ranked_list in ranked_lists:
+            for rank, item in enumerate(ranked_list, 1):
+                key = item["content"]
+                rrf_scores[key] = rrf_scores.get(key, 0.0) + (1.0 / (k + rank))
+                content_map[key] = item
+
+        sorted_items = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+        results = []
+        for content, score in sorted_items[:top_k]:
+            item = content_map[content].copy()
+            item["score"] = score
+            results.append(item)
+        return results
+
+
 def retrieve(
     query: str,
     top_k: int = DEFAULT_TOP_K,
@@ -64,7 +89,7 @@ def retrieve(
 
     # Step 2: Merge results using RRF (Reciprocal Rank Fusion)
     if dense_results and sparse_results:
-        merged = rerank_rrf([dense_results, sparse_results], top_k=top_k * 2)
+        merged = safe_rerank_rrf([dense_results, sparse_results], top_k=top_k * 2)
     elif dense_results:
         merged = dense_results
     elif sparse_results:
@@ -86,8 +111,8 @@ if __name__ == "__main__":
     print("=" * 60)
 
     test_queries = [
-        "What is the tuition fee at RMIT Vietnam?",
-        "How do I apply for scholarships?",
+        "What are the scholarship requirements at VinUni?",
+        "How do I apply for admissions?",
         "xyznonsenseunrelatedquery123",
     ]
 
