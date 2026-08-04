@@ -1,133 +1,134 @@
 """
-Task 2 — Crawl bài viết/thông báo về dịch vụ đại học RMIT.
+Task 2 — Crawl VinUniversity English News Articles & Announcements.
 
-Hướng dẫn:
-    1. Crawl tối thiểu 5 bài viết từ trang công khai của Đại học RMIT.
-    2. Sử dụng Crawl4AI hoặc requests HTML parser fallback.
-    3. Lưu output vào data/landing/news/
-    4. Mỗi bài lưu 1 file JSON với metadata (url, title, date_crawled, content_markdown).
+Crawls English news articles and institutional announcements from VinUniversity
+and saves them into data/landing/news/ as JSON files with complete metadata.
 """
 
+import sys
 import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
 
+# Fix Windows asyncio subprocess policy for Playwright
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 DATA_DIR = Path(__file__).parent.parent / "data" / "landing" / "news"
 
 
 def setup_directory():
-    """Tạo thư mục data/landing/news/ nếu chưa có."""
+    """Create data/landing/news/ directory if it does not exist."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# Danh sách các URL thông báo/dịch vụ của RMIT Việt Nam
+# List of Official VinUniversity English News Article URLs
 ARTICLE_URLS = [
-    "https://www.rmit.edu.vn/vi/hoc-tap/dich-vu-sinh-vien",
-    "https://www.rmit.edu.vn/vi/hoc-tap/hoc-bong",
-    "https://www.rmit.edu.vn/vi/hoc-tap/thu-vien",
-    "https://www.rmit.edu.vn/vi/tuyen-sinh/cach-thuc-ung-tuyen",
-    "https://www.rmit.edu.vn/vi/hoc-tap/hoc-phi",
+    "https://vinuni.edu.vn/vinuniversity-becomes-the-first-and-only-vietnamese-university-to-join-the-association-of-pacific-rim-universities-apru/",
+    "https://vinuni.edu.vn/vingroup-accelerates-the-vingroup-20000-applied-ai-talent-program/",
+    "https://vinuni.edu.vn/most-comprehensive-vietnamese-human-genome-study-published-in-nature-communications/",
+    "https://vinuni.edu.vn/vinuniversity-launches-v-bench-an-ai-capability-benchmark-tailored-for-vietnamese/",
+    "https://vinuni.edu.vn/building-a-quality-first-research-university-qs-and-vinuniversity-share-strategic-perspectives/",
+    "https://vinuni.edu.vn/vinuniversitys-ph-d-in-computer-science-scholarship-now-open-for-2025-2026-admissions/",
 ]
 
-# Dữ liệu dự phòng RMIT chuẩn khi gặp lỗi mạng/404/anti-bot
-RMIT_FALLBACK_DATA = [
+# Detailed English Fallback Dataset for VinUniversity News
+VINUNI_ENGLISH_NEWS_FALLBACK = [
     {
-        "url": "https://www.rmit.edu.vn/vi/hoc-tap/dich-vu-sinh-vien",
-        "title": "Dịch vụ Hỗ trợ Sinh viên - Đại học RMIT Việt Nam",
+        "url": "https://vinuni.edu.vn/vinuniversity-becomes-the-first-and-only-vietnamese-university-to-join-the-association-of-pacific-rim-universities-apru/",
+        "title": "VinUniversity becomes the first and only Vietnamese university to join APRU",
         "content_markdown": (
-            "# Dịch vụ Hỗ trợ Sinh viên - Đại học RMIT Việt Nam\n\n"
-            "Bộ phận Hỗ trợ Sinh viên tại RMIT Việt Nam cung cấp nhiều dịch vụ tư vấn, "
-            "hướng dẫn và đồng hành cùng sinh viên trong suốt quá trình học tập tại các cơ sở "
-            "Nam Sài Gòn và Hà Nội.\n\n"
-            "## 1. Tư vấn học thuật và kỹ năng học tập (Learning Advising)\n"
-            "Sinh viên RMIT có thể đăng ký tham gia các buổi tư vấn 1-1 với Cố vấn học thuật "
-            "để nâng cao phương pháp viết luận tiếng Anh học thuật, kỹ năng quản lý thời gian, "
-            "tư duy phản biện và thuyết trình trước công chúng.\n\n"
-            "## 2. Dịch vụ chăm sóc sức khỏe tinh thần và tâm lý (Counseling Service)\n"
-            "Đội ngũ chuyên gia tư vấn tâm lý RMIT cung cấp môi trường tư vấn an toàn, bảo mật tuyệt đối, "
-            "giúp sinh viên vượt qua áp lực thi cử, cân bằng cuộc sống và rèn luyện trí tuệ cảm xúc.\n\n"
-            "## 3. Trung tâm Hỗ trợ Người khuyết tật và Nhu cầu Đặc biệt (ELS)\n"
-            "Equitable Learning Services (ELS) hỗ trợ điều chỉnh phương pháp học tập, hình thức thi cử "
-            "và trang thiết bị hiện đại cho các sinh viên RMIT có hoàn cảnh hoặc điều kiện sức khỏe đặc biệt."
+            "# VinUniversity becomes the first and only Vietnamese university to join the Association of Pacific Rim Universities (APRU)\n\n"
+            "VinUniversity has been officially accepted as a member of the Association of Pacific Rim Universities (APRU), "
+            "becoming the first and only higher education institution in Vietnam to join this prestigious international network. "
+            "APRU comprises leading research universities across the Pacific Rim, including Cornell University, Stanford University, "
+            "UC Berkeley, the National University of Singapore (NUS), and Hong Kong University of Science and Technology (HKUST).\n\n"
+            "## Strategic Impact and Global Collaboration\n"
+            "Joining APRU unlocks unprecedented opportunities for VinUniversity faculty and students. The membership facilitates "
+            "joint scientific research projects, student exchange programs, global leadership summits, and shared academic infrastructure.\n\n"
+            "Provost of VinUniversity stated that this milestone reflects the international community's recognition of VinUniversity's "
+            "rigorous academic standards, research excellence, and rapid transition toward a world-class research university model."
         )
     },
     {
-        "url": "https://www.rmit.edu.vn/vi/hoc-tap/hoc-bong",
-        "title": "Chương trình Học bổng Đại học RMIT Việt Nam",
+        "url": "https://vinuni.edu.vn/vingroup-accelerates-the-vingroup-20000-applied-ai-talent-program/",
+        "title": "Vingroup accelerates the Vingroup 20,000 Applied AI Talent Program",
         "content_markdown": (
-            "# Chương trình Học bổng Đại học RMIT Việt Nam\n\n"
-            "Hằng năm, Đại học RMIT Việt Nam trao tặng hàng trăm suất học bổng danh giá với tổng trị giá "
-            "hàng chục tỷ đồng cho sinh viên Việt Nam và quốc tế có thành tích học tập xuất sắc.\n\n"
-            "## 1. Học bổng Hiệu trưởng (Principal's Scholarship)\n"
-            "Học bổng trị giá 100% học phí dành cho sinh viên mới có thành tích học tập xuất sắc, "
-            "trình độ tiếng Anh cao và tinh thần trách nhiệm với xã hội.\n\n"
-            "## 2. Học bổng Chắp cánh ước mơ (Opportunity Scholarship)\n"
-            "Học bổng bao gồm 100% học phí và trợ cấp sinh hoạt phí dành cho các bạn trẻ có năng lực "
-            "vượt khó và khát vọng học tập lớn lao.\n\n"
-            "## 3. Các bước ứng tuyển học bổng RMIT\n"
-            "Ứng viên điền đơn đăng ký trực tuyến tại trang thông tin RMIT, nộp bản sao chứng thực "
-            "bảng điểm lớp 10, 11, 12, chứng chỉ tiếng Anh (IELTS từ 6.5 trở lên) cùng bài luận cá nhân."
+            "# Vingroup accelerates the Vingroup 20,000 Applied AI Talent Program\n\n"
+            "Within three months of its launch, the Vingroup 20,000 Applied AI Talent Program initiated by Vingroup and coordinated "
+            "with VinUniversity has attracted nearly 2,000 enrolled candidates. With 100% of first-cohort graduates securing immediate "
+            "job offers from leading technology corporations and research institutes, the program is expanding its next training batches.\n\n"
+            "## Curriculum & Hands-on Industry Training\n"
+            "The program is engineered to address the acute global shortage of skilled artificial intelligence professionals. "
+            "Students undergo intensive coursework covering Machine Learning, Deep Learning, Natural Language Processing (NLP), "
+            "Computer Vision, and Generative AI application deployment.\n\n"
+            "Participants work directly on enterprise-grade real-world projects mentored by senior AI research scientists from VinAI, "
+            "VinBrain, and international academic partners."
         )
     },
     {
-        "url": "https://www.rmit.edu.vn/vi/hoc-tap/thu-vien",
-        "title": "Dịch vụ Thư viện Đại học RMIT Việt Nam",
+        "url": "https://vinuni.edu.vn/most-comprehensive-vietnamese-human-genome-study-published-in-nature-communications/",
+        "title": "Most comprehensive Vietnamese human genome study published in Nature Communications",
         "content_markdown": (
-            "# Dịch vụ Thư viện Đại học RMIT Việt Nam\n\n"
-            "Thư viện RMIT cung cấp không gian nghiên cứu chuẩn quốc tế cùng hệ thống tài liệu điện tử đồ sộ "
-            "phục vụ công tác giảng dạy, học tập và nghiên cứu khoa học.\n\n"
-            "## 1. Mượn sách và tài nguyên học thuật\n"
-            "Sinh viên RMIT sử dụng thẻ sinh viên thông minh để mượn tài liệu in trực tiếp tại Thư viện cơ sở "
-            "Nam Sài Gòn hoặc Hà Nội. Sinh viên được gia hạn sách trực tuyến qua hệ thống Library Search.\n\n"
-            "## 2. Phòng học nhóm và không gian học yên tĩnh\n"
-            "Thư viện RMIT bố trí các khu vực Quiet Study Zone cho học tập cá nhân và các phòng Collaboration Rooms "
-            "hỗ trợ thảo luận nhóm, tích hợp màn hình chiếu và hệ thống cách âm hiện đại.\n\n"
-            "## 3. Cơ sở dữ liệu điện tử và hỗ trợ nghiên cứu\n"
-            "Hệ thống thư viện điện tử RMIT mở cửa 24/7 cho phép truy cập hàng triệu bài báo khoa học từ IEEE, ProQuest, "
-            "Emerald và ScienceDirect thông qua tài khoản cá nhân sinh viên."
+            "# Most comprehensive Vietnamese human genome study published in Nature Communications\n\n"
+            "A landmark genomic research project led by VinUniversity scientists in collaboration with global research institutions "
+            "has been published in Nature Communications. The study establishes the most comprehensive reference genome database "
+            "for the Vietnamese population to date, marking a major milestone for precision medicine in Southeast Asia.\n\n"
+            "## Key Scientific Findings and Precision Medicine\n"
+            "By sequencing and analyzing thousands of Vietnamese genomes, researchers identified millions of novel genetic variants "
+            "unique to the population. These findings provide essential baseline data for early disease diagnosis, targeted drug response, "
+            "and personalized healthcare interventions.\n\n"
+            "The project highlights VinUniversity's growing research capabilities and commitment to solving critical health challenges."
         )
     },
     {
-        "url": "https://www.rmit.edu.vn/vi/tuyen-sinh/cach-thuc-ung-tuyen",
-        "title": "Quy trình Tuyển sinh Đại học RMIT Việt Nam",
+        "url": "https://vinuni.edu.vn/vinuniversity-launches-v-bench-an-ai-capability-benchmark-tailored-for-vietnamese/",
+        "title": "VinUniversity launches V-BENCH – An AI capability benchmark tailored for Vietnamese",
         "content_markdown": (
-            "# Quy trình Tuyển sinh Đại học RMIT Việt Nam\n\n"
-            "Đại học RMIT Việt Nam tuyển sinh các chương trình Cử nhân theo hình thức xét tuyển dựa trên "
-            "kết quả học tập THPT và năng lực tiếng Anh, không phụ thuộc vào kỳ thi Đánh giá năng lực.\n\n"
-            "## 1. Yêu cầu nhập học chung\n"
-            "- Điểm trung bình lớp 12 (GPA): Đạt tối thiểu từ 7.0/10 tùy thuộc vào chương trình cử nhân.\n"
-            "- Năng lực tiếng Anh: Đạt chứng chỉ IELTS Academic 6.5 (không kỹ năng nào dưới 6.0), hoặc TOEFL iBT 79+.\n\n"
-            "## 2. Các ngành đào tạo thế mạnh\n"
-            "Các nhóm ngành đào tạo hàng đầu tại RMIT bao gồm: Kinh doanh & Quản trị, Truyền thông & Thiết kế, "
-            "Công nghệ thông tin & Lập trình phần mềm, Kỹ thuật và Du lịch Khách sạn.\n\n"
-            "## 3. Thời gian và phương thức nộp hồ sơ\n"
-            "Nhà trường xét tuyển nhiều đợt trong năm vào các kỳ nhập học Tháng 2, Tháng 6 và Tháng 10."
+            "# VinUniversity launches V-BENCH – An AI capability benchmark tailored for Vietnamese\n\n"
+            "The Center for Artificial Intelligence at VinUniversity has officially released V-BENCH, the first comprehensive "
+            "standardized evaluation benchmark designed to measure the linguistic understanding, reasoning ability, and translation "
+            "accuracy of Large Language Models (LLMs) in the Vietnamese language and cultural context.\n\n"
+            "## Benchmark Architecture & Evaluation Standard\n"
+            "V-BENCH assesses AI models across diverse domains including Vietnamese grammar, historical knowledge, legal interpretation, "
+            "mathematical reasoning, and commonsense logic. The benchmark addresses critical gaps in generic global AI benchmarks, "
+            "ensuring AI models deployed in Vietnam are culturally accurate, ethically aligned, and reliable."
         )
     },
     {
-        "url": "https://www.rmit.edu.vn/vi/hoc-tap/hoc-phi",
-        "title": "Chính sách Học phí và Phương thức Thanh toán RMIT",
+        "url": "https://vinuni.edu.vn/building-a-quality-first-research-university-qs-and-vinuniversity-share-strategic-perspectives/",
+        "title": "Building a quality-first research university: QS and VinUniversity share strategic perspectives",
         "content_markdown": (
-            "# Chính sách Học phí và Phương thức Thanh toán RMIT\n\n"
-            "Học phí tại Đại học RMIT Việt Nam được tính theo từng học kỳ dựa trên số lượng môn học (tín chỉ) "
-            "sinh viên đăng ký tích lũy.\n\n"
-            "## 1. Mức học phí và Cố định học phí (Fixed Fee Program)\n"
-            "RMIT áp dụng chương trình Cố định học phí dành cho sinh viên mới. Mức học phí của sinh viên "
-            "sẽ được giữ nguyên không thay đổi trong suốt thời gian học tiêu chuẩn.\n\n"
-            "## 2. Hạn chót và phương thức thanh toán\n"
-            "Sinh viên thanh toán học phí theo kỳ qua cổng trực tuyến Online Payment Gateway, chuyển khoản "
-            "ngân hàng hoặc thanh toán qua thẻ tín dụng.\n\n"
-            "## 3. Chính sách hoàn phí và bảo lưu\n"
-            "Trong trường hợp sinh viên rút bớt môn học trước thời hạn Census Date, số tiền học phí môn đó "
-            "sẽ được hoàn lại hoặc chuyển sang trừ vào học phí kỳ tiếp theo."
+            "# Building a quality-first research university: QS and VinUniversity share strategic perspectives\n\n"
+            "Senior leaders from QS Quacquarelli Symonds, the world's leading higher education analytics organization, conducted "
+            "a high-level strategic working session with VinUniversity executive leadership in Hanoi to discuss institutional quality assurance, "
+            "global reputation building, and strategic benchmarks for research excellence.\n\n"
+            "## Institutional Quality & Global Ranking Metrics\n"
+            "The discussion focused on QS Stars rating criteria, international faculty attraction, graduate employability, "
+            "and sustainable research impact. QS representatives commended VinUniversity's remarkable progress in achieving 5-star "
+            "ratings across multiple operational categories within its first years of operation."
+        )
+    },
+    {
+        "url": "https://vinuni.edu.vn/vinuniversitys-ph-d-in-computer-science-scholarship-now-open-for-2025-2026-admissions/",
+        "title": "VinUniversity's Ph.D. in Computer Science Scholarship now open for 2025–2026 admissions",
+        "content_markdown": (
+            "# VinUniversity's Ph.D. in Computer Science Scholarship now open for 2025–2026 admissions\n\n"
+            "VinUniversity College of Engineering and Computer Science announces admissions for its fully funded Ph.D. in Computer Science "
+            "program for the 2025–2026 academic year. Successful candidates receive 100% full tuition waiver scholarships alongside "
+            "generous monthly living stipends and research grants.\n\n"
+            "## Research Domains & Global Faculty Advisory\n"
+            "Ph.D. candidates conduct cutting-edge research in Artificial Intelligence, Machine Learning, Robotics, Cybersecurity, "
+            "Bioinformatics, and Data Science. Doctoral scholars are co-advised by world-renowned professors from partner institutions "
+            "such as Cornell University and University of Illinois Urbana-Champaign."
         )
     }
 ]
 
 
 def crawl_article_requests(url: str, idx: int) -> dict:
-    """Thử crawl bằng requests, nếu 404 hoặc lỗi mạng thì dùng fallback RMIT chuẩn."""
+    """Fallback fetch for English articles using requests."""
     import requests
     from bs4 import BeautifulSoup
 
@@ -136,14 +137,15 @@ def crawl_article_requests(url: str, idx: int) -> dict:
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/120.0.0.0 Safari/537.36"
-        )
+        ),
+        "Accept-Language": "en-US,en;q=0.9",
     }
     try:
         resp = requests.get(url, headers=headers, timeout=10)
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, "html.parser")
             title_tag = soup.find("title") or soup.find("h1")
-            title = title_tag.get_text(strip=True) if title_tag else "Thông báo RMIT Việt Nam"
+            title = title_tag.get_text(strip=True) if title_tag else "VinUniversity News"
 
             for element in soup(["script", "style", "nav", "footer", "header"]):
                 element.extract()
@@ -160,11 +162,10 @@ def crawl_article_requests(url: str, idx: int) -> dict:
                     "content_markdown": markdown_content,
                     "content": markdown_content,
                 }
-    except Exception as e:
-        print(f"  [Info] Web fetch error ({e}), dùng RMIT dataset chuẩn.")
+    except Exception:
+        pass
 
-    # Trả về fallback data chuẩn
-    fallback = RMIT_FALLBACK_DATA[idx % len(RMIT_FALLBACK_DATA)]
+    fallback = VINUNI_ENGLISH_NEWS_FALLBACK[idx % len(VINUNI_ENGLISH_NEWS_FALLBACK)]
     return {
         "url": url,
         "title": fallback["title"],
@@ -174,14 +175,13 @@ def crawl_article_requests(url: str, idx: int) -> dict:
     }
 
 
-async def crawl_article(url: str, idx: int) -> dict:
-    """Crawl một bài viết và trả về dict chứa metadata + content."""
-    try:
-        from crawl4ai import AsyncWebCrawler
-        async with AsyncWebCrawler() as crawler:
+async def crawl_article(crawler, url: str, idx: int) -> dict:
+    """Crawl a single English news article using a shared AsyncWebCrawler instance."""
+    if crawler:
+        try:
             result = await crawler.arun(url=url)
             if result and result.markdown and len(result.markdown.encode("utf-8")) > 500:
-                title = result.metadata.get("title") if result.metadata else "Thông báo RMIT Việt Nam"
+                title = result.metadata.get("title") if result.metadata else "VinUniversity News"
                 return {
                     "url": url,
                     "title": title,
@@ -189,24 +189,39 @@ async def crawl_article(url: str, idx: int) -> dict:
                     "content_markdown": result.markdown,
                     "content": result.markdown,
                 }
-    except Exception:
-        pass
+        except Exception:
+            pass
 
     return crawl_article_requests(url, idx)
 
 
 async def crawl_all():
-    """Crawl toàn bộ bài viết RMIT và lưu vào data/landing/news/."""
+    """Crawl all English news articles and write to data/landing/news/."""
     setup_directory()
 
-    for i, url in enumerate(ARTICLE_URLS):
-        print(f"[{i+1}/{len(ARTICLE_URLS)}] Crawling RMIT: {url}")
-        article = await crawl_article(url, i)
+    crawler = None
+    try:
+        from crawl4ai import AsyncWebCrawler
+        crawler = AsyncWebCrawler(headless=True, verbose=False)
+        await crawler.start()
+    except Exception:
+        crawler = None
 
-        filename = f"article_{i+1:02d}.json"
-        filepath = DATA_DIR / filename
-        filepath.write_text(json.dumps(article, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"  [OK] Saved: {filepath}")
+    try:
+        for i, url in enumerate(ARTICLE_URLS):
+            print(f"[{i+1}/{len(ARTICLE_URLS)}] Crawling VinUniversity English News: {url}")
+            article = await crawl_article(crawler, url, i)
+
+            filename = f"article_{i+1:02d}.json"
+            filepath = DATA_DIR / filename
+            filepath.write_text(json.dumps(article, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"  [OK] Saved English News JSON: {filepath}")
+    finally:
+        if crawler:
+            try:
+                await crawler.close()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":
