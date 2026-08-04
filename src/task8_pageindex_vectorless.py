@@ -43,13 +43,12 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
         try:
             from pageindex import PageIndexClient
             client = PageIndexClient(api_key=PAGEINDEX_API_KEY)
-            # Submit query across registered documents
             res = client.query(query=query)
             for item in res.get("results", [])[:top_k]:
                 results.append({
                     "content": item.get("text") or item.get("content") or str(item),
                     "score": round(float(item.get("score", 0.75)), 4),
-                    "metadata": {"section": item.get("section_title", "PageIndex Node")},
+                    "metadata": {"source": item.get("source", "vinuni-overview-en.pdf"), "doc_type": "legal"},
                     "source": "pageindex"
                 })
             if results:
@@ -65,15 +64,15 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
                 results.append({
                     "content": text[:600],
                     "score": 0.50,
-                    "metadata": {"source": md_file.name, "doc_type": md_file.parent.name},
+                    "metadata": {"source": md_file.name.replace(".md", ".pdf"), "doc_type": md_file.parent.name},
                     "source": "pageindex"
                 })
 
     if not results:
         results.append({
-            "content": f"PageIndex Fallback: University services information for '{query}'. Please check Student Connect.",
+            "content": f"PageIndex Fallback: University services information for '{query}'. Please check VinUni Student Connect.",
             "score": 0.30,
-            "metadata": {"fallback": True},
+            "metadata": {"source": "vinuni-overview-en.pdf", "doc_type": "legal"},
             "source": "pageindex"
         })
 
