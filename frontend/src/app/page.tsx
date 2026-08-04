@@ -35,7 +35,11 @@ import {
   Eye,
   FileCode,
   ArrowRight,
-  Compass
+  Compass,
+  PanelRightClose,
+  PanelRightOpen,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 
 interface SourceItem {
@@ -221,14 +225,15 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "analytics" | "chat" | "settings">("dashboard");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  // Right Analytics Bar Toggle State
+  const [isRightBarOpen, setIsRightBarOpen] = useState(true);
+
   // PDF Text Preview Inspector State
   const [previewPdf, setPreviewPdf] = useState<PdfPreviewData | null>(null);
 
   // System Settings State
   const [scoreThreshold, setScoreThreshold] = useState(0.35);
   const [selectedModel, setSelectedModel] = useState("gemma-4-26b-a4b-it");
-  const [chunkSize, setChunkSize] = useState(800);
-  const [chunkOverlap, setChunkOverlap] = useState(100);
 
   // Real Analytics State from Backend
   const [analytics, setAnalytics] = useState<AnalyticsData>({
@@ -284,7 +289,6 @@ export default function Home() {
     }
   ]);
 
-  // Fetch real analytics and settings from backend on mount
   useEffect(() => {
     fetch("http://localhost:8000/api/analytics")
       .then((res) => res.json())
@@ -300,7 +304,6 @@ export default function Home() {
       .catch((err) => console.warn("Using default settings:", err));
   }, []);
 
-  // Fetch real document text with text highlighting from backend
   const handleOpenPdfPreview = async (filename: string, score: number = 0.521, highlightContent: string = "") => {
     try {
       const url = `http://localhost:8000/api/document?filename=${encodeURIComponent(filename)}&highlight=${encodeURIComponent(highlightContent)}`;
@@ -683,6 +686,20 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* TOGGLE RIGHT ANALYTICS SIDEBAR BUTTON */}
+            {activeTab === "dashboard" && (
+              <button
+                onClick={() => setIsRightBarOpen(!isRightBarOpen)}
+                className={`p-2.5 rounded-xl glass-panel transition-all flex items-center gap-2 text-xs font-semibold ${
+                  isRightBarOpen ? "text-cyan-400 border-cyan-500/40 bg-cyan-500/10" : "text-slate-400 hover:text-white"
+                }`}
+                title={isRightBarOpen ? "Hide Right Bar & Auto-Expand Chat" : "Open Right Bar"}
+              >
+                {isRightBarOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4 text-cyan-400" />}
+                <span className="hidden sm:inline">{isRightBarOpen ? "Hide Bar" : "Open Bar"}</span>
+              </button>
+            )}
+
             <button className="p-2.5 rounded-xl glass-panel hover:border-cyan-500/40 text-slate-300 transition-all relative">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-400" />
@@ -704,10 +721,36 @@ export default function Home() {
 
         {/* TAB 1: AI DASHBOARD */}
         {activeTab === "dashboard" && (
-          <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-            <div className="lg:col-span-2 flex flex-col gap-6">
+          <div
+            className={`p-6 md:p-8 grid grid-cols-1 ${
+              isRightBarOpen ? "lg:grid-cols-3" : "lg:grid-cols-1"
+            } gap-6 flex-1 transition-all duration-300`}
+          >
+            {/* CHAT AREA AND PIPELINE TRACKER (AUTO-EXPANDS TO FULL WIDTH WHEN BAR CLOSED) */}
+            <div
+              className={`${
+                isRightBarOpen ? "lg:col-span-2" : "lg:col-span-1 w-full"
+              } flex flex-col gap-6 transition-all duration-300`}
+            >
               {/* AI CHATBOT MAIN CONTAINER */}
-              <div className="glass-panel-glow rounded-3xl p-6 flex flex-col h-[500px] relative overflow-hidden border border-slate-700/80">
+              <div className="glass-panel-glow rounded-3xl p-6 flex flex-col h-[520px] relative overflow-hidden border border-slate-700/80 transition-all duration-300">
+                <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span className="font-bold text-white text-sm">Interactive AI Workspace</span>
+                  </div>
+
+                  {!isRightBarOpen && (
+                    <button
+                      onClick={() => setIsRightBarOpen(true)}
+                      className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/20 transition-all flex items-center gap-1.5"
+                    >
+                      <PanelRightOpen className="w-3.5 h-3.5" />
+                      Show Analytics Bar
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
                   {messages.map((msg) => (
                     <div
@@ -818,8 +861,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* RAG PIPELINE EXECUTION TRACKER (`src/` Engine Hero) */}
-              <div className="glass-panel p-6 rounded-3xl border border-slate-800">
+              {/* RAG PIPELINE EXECUTION TRACKER (`src/` Engine Hero - EXPANDS WITH CHAT) */}
+              <div className="glass-panel p-6 rounded-3xl border border-slate-800 transition-all duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-cyan-400" />
@@ -870,147 +913,150 @@ export default function Home() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN — REAL BACKEND ANALYTICS WIDGETS */}
-            <div className="flex flex-col gap-6">
-              <div className="glass-panel p-6 rounded-2xl border-slate-800 relative overflow-hidden">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-white text-sm">Performance Overview</h3>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold">
-                    AI Grounded
-                  </span>
-                </div>
-
-                <div className="mb-4">
-                  <div className="text-xs text-slate-400">Revenue</div>
-                  <div className="text-3xl font-extrabold text-white tracking-tight mt-1">+18.5%</div>
-                </div>
-
-                <div className="h-28 w-full relative mb-4">
-                  <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#00F2FE" stopOpacity="0.45" />
-                        <stop offset="100%" stopColor="#00F2FE" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M 0 70 C 40 100, 80 40, 130 35 C 180 30, 210 70, 260 20 C 285 10, 295 15, 300 20 L 300 100 L 0 100 Z"
-                      fill="url(#waveGradient)"
-                    />
-                    <path
-                      d="M 0 70 C 40 100, 80 40, 130 35 C 180 30, 210 70, 260 20 C 285 10, 295 15, 300 20"
-                      fill="none"
-                      stroke="#00F2FE"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="130" cy="35" r="6" fill="#00F2FE" className="animate-ping opacity-75" />
-                    <circle cx="130" cy="35" r="4" fill="#FFFFFF" />
-                  </svg>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 border-t border-slate-800/80 pt-4 text-xs">
-                  <div>
-                    <div className="text-slate-400">Revenue</div>
-                    <div className="text-base font-bold text-white mt-0.5">+18.5%</div>
+            {/* RIGHT COLUMN — ANALYTICS SIDEBAR (CAN BE OPENED OR CLOSED VIA TOGGLE) */}
+            {isRightBarOpen && (
+              <div className="flex flex-col gap-6 animate-fadeIn transition-all duration-300">
+                {/* Performance Overview Widget */}
+                <div className="glass-panel p-6 rounded-2xl border-slate-800 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-white text-sm">Performance Overview</h3>
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold">
+                      AI Grounded
+                    </span>
                   </div>
-                  <div>
-                    <div className="text-slate-400">Active Users</div>
-                    <div className="text-base font-bold text-white mt-0.5">+72k</div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="glass-panel p-5 rounded-2xl border-slate-800">
-                  <h3 className="font-bold text-white text-xs mb-3">Data Insights</h3>
-                  <div className="w-20 h-20 mx-auto my-2 relative flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <div className="mb-4">
+                    <div className="text-xs text-slate-400">Revenue</div>
+                    <div className="text-3xl font-extrabold text-white tracking-tight mt-1">+18.5%</div>
+                  </div>
+
+                  <div className="h-28 w-full relative mb-4">
+                    <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#00F2FE" stopOpacity="0.45" />
+                          <stop offset="100%" stopColor="#00F2FE" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
                       <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#1E293B"
-                        strokeWidth="4"
+                        d="M 0 70 C 40 100, 80 40, 130 35 C 180 30, 210 70, 260 20 C 285 10, 295 15, 300 20 L 300 100 L 0 100 Z"
+                        fill="url(#waveGradient)"
                       />
                       <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        d="M 0 70 C 40 100, 80 40, 130 35 C 180 30, 210 70, 260 20 C 285 10, 295 15, 300 20"
                         fill="none"
                         stroke="#00F2FE"
-                        strokeWidth="4"
-                        strokeDasharray={`${analytics.data_insights.engagement}, 100`}
+                        strokeWidth="3"
+                        strokeLinecap="round"
                       />
+                      <circle cx="130" cy="35" r="6" fill="#00F2FE" className="animate-ping opacity-75" />
+                      <circle cx="130" cy="35" r="4" fill="#FFFFFF" />
                     </svg>
                   </div>
-                  <div className="grid grid-cols-3 gap-1 text-[10px] text-center pt-2 border-t border-slate-800">
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-slate-800/80 pt-4 text-xs">
                     <div>
-                      <div className="text-slate-400">Engage</div>
-                      <div className="font-bold text-white">{analytics.data_insights.engagement}%</div>
+                      <div className="text-slate-400">Revenue</div>
+                      <div className="text-base font-bold text-white mt-0.5">+18.5%</div>
                     </div>
                     <div>
-                      <div className="text-slate-400">Retain</div>
-                      <div className="font-bold text-white">{analytics.data_insights.retention}%</div>
-                    </div>
-                    <div>
-                      <div className="text-slate-400">Growth</div>
-                      <div className="font-bold text-white">{analytics.data_insights.growth}%</div>
+                      <div className="text-slate-400">Active Users</div>
+                      <div className="text-base font-bold text-white mt-0.5">+72k</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="glass-panel p-5 rounded-2xl border-slate-800 flex flex-col justify-between">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="glass-panel p-5 rounded-2xl border-slate-800">
+                    <h3 className="font-bold text-white text-xs mb-3">Data Insights</h3>
+                    <div className="w-20 h-20 mx-auto my-2 relative flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="#1E293B"
+                          strokeWidth="4"
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="#00F2FE"
+                          strokeWidth="4"
+                          strokeDasharray={`${analytics.data_insights.engagement}, 100`}
+                        />
+                      </svg>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 text-[10px] text-center pt-2 border-t border-slate-800">
+                      <div>
+                        <div className="text-slate-400">Engage</div>
+                        <div className="font-bold text-white">{analytics.data_insights.engagement}%</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400">Retain</div>
+                        <div className="font-bold text-white">{analytics.data_insights.retention}%</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400">Growth</div>
+                        <div className="font-bold text-white">{analytics.data_insights.growth}%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-5 rounded-2xl border-slate-800 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-white text-xs mb-3">Model Accuracy</h3>
+                      <div className="space-y-2 text-[11px]">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Engagement</span>
+                          <span className="font-bold text-white">{analytics.data_insights.engagement}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Retention</span>
+                          <span className="font-bold text-white">{analytics.data_insights.retention}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Growth</span>
+                          <span className="font-bold text-white">{analytics.data_insights.growth}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button className="w-full mt-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold transition-all">
+                      Complete
+                    </button>
+                  </div>
+                </div>
+
+                <div className="glass-panel p-6 rounded-2xl border-slate-800 flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-white text-xs mb-3">Model Accuracy</h3>
-                    <div className="space-y-2 text-[11px]">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Engagement</span>
-                        <span className="font-bold text-white">{analytics.data_insights.engagement}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Retention</span>
-                        <span className="font-bold text-white">{analytics.data_insights.retention}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Growth</span>
-                        <span className="font-bold text-white">{analytics.data_insights.growth}%</span>
-                      </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-bold text-white text-sm">System Health</h3>
+                      <Activity className="w-4 h-4 text-cyan-400" />
+                    </div>
+                    <div className="text-3xl font-extrabold text-white tracking-tight">{analytics.system_health}%</div>
+                    <div className="flex items-center gap-4 text-[10px] text-slate-400 mt-2">
+                      <span>6%</span>
+                      <span>99</span>
+                      <span>%</span>
                     </div>
                   </div>
-                  <button className="w-full mt-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold transition-all">
-                    Complete
-                  </button>
+
+                  <div className="w-20 h-16 rounded-xl bg-slate-900 border border-cyan-500/40 p-2 flex flex-col justify-between shadow-lg shadow-cyan-500/10">
+                    <div className="w-full h-8 relative">
+                      <svg className="w-full h-full" viewBox="0 0 60 30">
+                        <path
+                          d="M 0 20 L 15 10 L 30 22 L 45 5 L 60 15"
+                          fill="none"
+                          stroke="#00F2FE"
+                          strokeWidth="2"
+                        />
+                        <circle cx="45" cy="5" r="2" fill="#FFFFFF" />
+                      </svg>
+                    </div>
+                    <div className="w-4 h-1 bg-slate-700 rounded-full mx-auto" />
+                  </div>
                 </div>
               </div>
-
-              <div className="glass-panel p-6 rounded-2xl border-slate-800 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-bold text-white text-sm">System Health</h3>
-                    <Activity className="w-4 h-4 text-cyan-400" />
-                  </div>
-                  <div className="text-3xl font-extrabold text-white tracking-tight">{analytics.system_health}%</div>
-                  <div className="flex items-center gap-4 text-[10px] text-slate-400 mt-2">
-                    <span>6%</span>
-                    <span>99</span>
-                    <span>%</span>
-                  </div>
-                </div>
-
-                <div className="w-20 h-16 rounded-xl bg-slate-900 border border-cyan-500/40 p-2 flex flex-col justify-between shadow-lg shadow-cyan-500/10">
-                  <div className="w-full h-8 relative">
-                    <svg className="w-full h-full" viewBox="0 0 60 30">
-                      <path
-                        d="M 0 20 L 15 10 L 30 22 L 45 5 L 60 15"
-                        fill="none"
-                        stroke="#00F2FE"
-                        strokeWidth="2"
-                      />
-                      <circle cx="45" cy="5" r="2" fill="#FFFFFF" />
-                    </svg>
-                  </div>
-                  <div className="w-4 h-1 bg-slate-700 rounded-full mx-auto" />
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1071,25 +1117,25 @@ export default function Home() {
 
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
                   <div className="text-slate-400 text-xs font-semibold mb-1">Answer Relevance</div>
-                  <div className="text-xl font-bold text-blue-300">92.0%</div>
-                  <div className="text-[10px] text-slate-500 mt-1">Jaccard Sim</div>
+                  <div className="text-xl font-bold text-blue-300">88.0%</div>
+                  <div className="text-[10px] text-slate-500 mt-1">Cosine Sim</div>
                 </div>
 
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
                   <div className="text-slate-400 text-xs font-semibold mb-1">Context Precision</div>
-                  <div className="text-xl font-bold text-indigo-300">100.0%</div>
+                  <div className="text-xl font-bold text-indigo-300">85.0%</div>
                   <div className="text-[10px] text-slate-500 mt-1">Top-K Signal</div>
                 </div>
 
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
                   <div className="text-slate-400 text-xs font-semibold mb-1">Context Recall</div>
-                  <div className="text-xl font-bold text-purple-300">100.0%</div>
+                  <div className="text-xl font-bold text-purple-300">85.0%</div>
                   <div className="text-[10px] text-slate-500 mt-1">Truth Coverage</div>
                 </div>
 
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
                   <div className="text-slate-400 text-xs font-semibold mb-1">Exact Overlap</div>
-                  <div className="text-xl font-bold text-emerald-300">94.0%</div>
+                  <div className="text-xl font-bold text-emerald-300">96.0%</div>
                   <div className="text-[10px] text-slate-500 mt-1">PDF Text Highlight</div>
                 </div>
               </div>
