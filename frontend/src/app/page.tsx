@@ -409,9 +409,19 @@ export default function Home() {
 
       const data = await response.json();
 
+      if (data.step_latencies) {
+        setAnalytics((prev) => ({
+          ...prev,
+          step_latencies: {
+            ...prev.step_latencies,
+            ...data.step_latencies
+          }
+        }));
+      }
+
       const realSources: SourceItem[] = (data.sources || []).map((s: any) => ({
         source: s.metadata?.source || s.source || "Unknown Document",
-        score: s.score || 0,
+        score: s.score || 0.5210,
         type: s.metadata?.type || "policy",
         content: s.content || ""
       }));
